@@ -3,21 +3,29 @@ cabal-version: 2.2
 name: sqeq
 version: 0
 
-library
+common language
   build-depends: base
   default-language: Haskell2010
+
+library
+  import: language
   exposed-modules: Sqeq
   hs-source-dirs: lib
 
 executable sqeq
-  build-depends: base, sqeq
-  default-language: Haskell2010
+  import: language
+  build-depends: sqeq
   hs-source-dirs: exe
   main-is: Main.hs
 
 test-suite tests
-  build-depends: base
-  default-language: Haskell2010
+  import: language
+  build-depends:
+    -- global
+    tasty,
+    tasty-hunit,
+    -- package
+    sqeq,
   hs-source-dirs: test
   main-is: Tests.hs
   type: exitcode-stdio-1.0
