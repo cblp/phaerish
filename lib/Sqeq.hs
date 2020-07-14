@@ -1,14 +1,4 @@
-{-# OPTIONS -Wall #-}
-
-main :: IO ()
-main = do
-  putStrLn "Enter a:"
-  a <- readLn
-  putStrLn "Enter b:"
-  b <- readLn
-  putStrLn "Enter c:"
-  c <- readLn
-  putStrLn $ "Solution: " ++ show (solveSquare a b c)
+module Sqeq (solveSquare) where
 
 -- | Solve equation of kind @a x² + b x + c = 0@
 solveSquare :: Double -> Double -> Double -> [Double]
