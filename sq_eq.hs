@@ -1,12 +1,14 @@
 {-# OPTIONS -Wall #-}
 
 main :: IO ()
-main =
-  print $ solveSquare a b c
-  where
-    a = 1 :: Double
-    b = -2
-    c = 1
+main = do
+  putStrLn "Enter a:"
+  a <- readLn
+  putStrLn "Enter b:"
+  b <- readLn
+  putStrLn "Enter c:"
+  c <- readLn
+  putStrLn $ "Solution: " ++ show (solveSquare a b c)
 
 -- | Solve equation of kind @a x² + b x + c = 0@
 solveSquare :: Double -> Double -> Double -> [Double]
