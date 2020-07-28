@@ -14,7 +14,7 @@ library
 
 executable sqeq
   import: language
-  build-depends: sqeq
+  build-depends: optparse-applicative, sqeq
   hs-source-dirs: exe
   main-is: Main.hs
 
