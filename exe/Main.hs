@@ -1,11 +1,17 @@
-import           Sqeq (solveSquare)
+import           System.Environment (getArgs, getProgName)
+import           System.Exit        (die)
+
+import           Sqeq               (solveSquare)
 
 main :: IO ()
 main = do
-  putStrLn "Enter a:"
-  a <- readLn
-  putStrLn "Enter b:"
-  b <- readLn
-  putStrLn "Enter c:"
-  c <- readLn
-  putStrLn $ "Solution: " ++ show (solveSquare a b c)
+  prog <- getProgName
+  args <- getArgs
+  case args of
+    [as, bs, cs] ->
+      let
+        a = read as
+        b = read bs
+        c = read cs
+      in putStrLn $ "Solution: " ++ show (solveSquare a b c)
+    _ -> die $ "Usage: " ++ prog ++ " NUMBER NUMBER NUMBER"
