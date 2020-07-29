@@ -1,8 +1,9 @@
-import           Control.Applicative ((<**>))
+import           Control.Applicative (optional, (<**>))
+import           Data.Maybe          (fromMaybe)
 import           Options.Applicative (Parser, ParserInfo, argument, auto,
                                       execParser, fullDesc, header, help,
                                       helper, info, long, metavar, option,
-                                      short, value)
+                                      short)
 
 import           Sqeq                (solveSquare)
 
@@ -35,9 +36,11 @@ parser =
     <$> argument auto (metavar "A" <> help "x^2 coefficient")
     <*> argument auto (metavar "B" <> help "x coefficient")
     <*> argument auto (metavar "C" <> help "free term")
-    <*> option   auto (   metavar "LANGUAGE"
-                      <>  help "Language: En (default), Ru"
-                      <>  value En
-                      <>  long "language"
-                      <>  short 'l'
-                      )
+    <*> (fromMaybe En <$> optional languageOpt)
+  where
+    languageOpt =
+      option auto (   metavar "LANGUAGE"
+                  <>  help "Language: En (default), Ru"
+                  <>  long "language"
+                  <>  short 'l'
+                  )
