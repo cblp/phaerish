@@ -1,10 +1,8 @@
 import           Control.Applicative ((<**>))
-import           Options.Applicative (Parser, argument, auto, execParser,
-                                      fullDesc, header, help, helper, info,
-                                      long, metavar, option, progDesc, short,
-                                      value)
-import           System.Environment  (getArgs, getProgName)
-import           System.Exit         (die)
+import           Options.Applicative (Parser, ParserInfo, argument, auto,
+                                      execParser, fullDesc, header, help,
+                                      helper, info, long, metavar, option,
+                                      short, value)
 
 import           Sqeq                (solveSquare)
 
@@ -25,6 +23,7 @@ main = do
           Ru -> "Ответ"
   putStrLn $ solution ++ ": " ++ show (solveSquare a b c)
 
+parserInfo :: ParserInfo Options
 parserInfo =
   info
     (parser <**> helper)
@@ -33,12 +32,12 @@ parserInfo =
 parser :: Parser Options
 parser =
   Options
-  <$> argument auto (metavar "A" <> help "x^2 coefficient")
-  <*> argument auto (metavar "B" <> help "x coefficient")
-  <*> argument auto (metavar "C" <> help "free term")
-  <*> option   auto (   metavar "LANGUAGE"
-                    <>  help "Language: En (default), Ru"
-                    <>  value En
-                    <>  long "language"
-                    <>  short 'l'
-                    )
+    <$> argument auto (metavar "A" <> help "x^2 coefficient")
+    <*> argument auto (metavar "B" <> help "x coefficient")
+    <*> argument auto (metavar "C" <> help "free term")
+    <*> option   auto (   metavar "LANGUAGE"
+                      <>  help "Language: En (default), Ru"
+                      <>  value En
+                      <>  long "language"
+                      <>  short 'l'
+                      )
