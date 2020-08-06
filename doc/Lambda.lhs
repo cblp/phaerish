@@ -9,11 +9,10 @@ E ::= V           -- variable
    |  (E E)       -- application
    |  (\ V -> E)  -- abstraction
 
-
 > type VarName = String
 
 > data Expr
->   = Variable String
+>   = Variable VarName
 >   | Application Expr Expr
 >   | Abstraction VarName Expr
 
