@@ -1,3 +1,5 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 import           Control.Applicative ((<**>))
 import           Options.Applicative (Parser, ParserInfo, argument, auto,
                                       execParser, fullDesc, header, help,
@@ -16,7 +18,7 @@ data Language = En | Ru
 
 main :: IO ()
 main = do
-  Options{a = a, b = b, c = c, language = language} <- execParser parserInfo
+  Options{a, b, c, language} <- execParser parserInfo
   let solution =
         case language of
           En -> "Solution"

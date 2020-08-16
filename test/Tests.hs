@@ -1,4 +1,4 @@
-import           Test.Tasty       (TestTree, defaultMain, testGroup)
+import           Test.Tasty       (defaultMain, testGroup)
 import           Test.Tasty.HUnit (testCase, (@?=))
 
 import           Sqeq             (solveSquare)
