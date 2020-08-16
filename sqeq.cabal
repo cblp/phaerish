@@ -18,6 +18,12 @@ executable sqeq
   hs-source-dirs: exe
   main-is: Main.hs
 
+executable clusters
+  import: language
+  build-depends: random, vector
+  hs-source-dirs: clusters
+  main-is: Main.hs
+
 test-suite tests
   import: language
   build-depends:
