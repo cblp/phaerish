@@ -15,14 +15,20 @@ import           System.Random       (randomIO)
 main :: IO ()
 main =
   do
-    ml <- genMapL height width; printMapL ml; print $ countClustersL ml
-    mv <- genMapV height width; printMapV mv; print $ countClustersV mv
-    mm <- genMapM height width; printMapM mm; c <-    countClustersM mm; print c
+    testMapL height width
+    testMapV height width
+    testMapM height width
   where
     height = 5
     width  = 5
 
 type MapL = [[Bool]]
+
+testMapL :: Int -> Int -> IO ()
+testMapL height width = do
+  ml <- genMapL height width
+  printMapL ml
+  print $ countClustersL ml
 
 genMapL :: Int -> Int -> IO MapL
 genMapL height width = replicateM height $ replicateM width randomIO
@@ -76,6 +82,12 @@ countClustersL m0 = go (0, 0) m0 where
 
 type MapV = Vector (Vector Bool)
 
+testMapV :: Int -> Int -> IO ()
+testMapV height width = do
+  mv <- genMapV height width
+  printMapV mv
+  print $ countClustersV mv
+
 genMapV :: Int -> Int -> IO MapV
 genMapV height width = do
   asList <- genMapL height width
@@ -124,6 +136,13 @@ countClustersV m0 = go (0, 0) m0 where
   modifyAt i f v = v // [(i, f $ v ! i)]
 
 type MapM = Vector (IOVector Bool)
+
+testMapM :: Int -> Int -> IO ()
+testMapM height width = do
+  mm <- genMapM height width
+  printMapM mm
+  c <- countClustersM mm
+  print c
 
 genMapM :: Int -> Int -> IO MapM
 genMapM height width = do
