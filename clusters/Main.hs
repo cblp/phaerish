@@ -1,11 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 import           Control.Monad       (replicateM, when)
 import           Data.Foldable       (for_, toList)
 import           Data.Function       ((&))
-import           Data.IORef          (modifyIORef, newIORef, readIORef)
+import           Data.IORef          (IORef, modifyIORef, newIORef, readIORef)
 import           Data.Traversable    (for)
-import           Data.Vector         (Vector, freeze, thaw, (!), (//))
+import           Data.Vector         (Vector, thaw, (!), (//))
 import qualified Data.Vector         as Vector
 import           Data.Vector.Mutable (IOVector)
 import qualified Data.Vector.Mutable as MVector
@@ -19,16 +17,18 @@ main =
     testMapV height width
     testMapM height width
   where
-    height = 5
-    width  = 5
+    height = 8
+    width  = 8
 
-type MapL = [[Bool]]
+type Soil = Bool
+
+type MapL = [[Soil]]
 
 testMapL :: Int -> Int -> IO ()
 testMapL height width = do
-  ml <- genMapL height width
-  printMapL ml
-  print $ countClustersL ml
+  m <- genMapL height width
+  printMapL m
+  print $ countClustersL m
 
 genMapL :: Int -> Int -> IO MapL
 genMapL height width =
@@ -68,7 +68,8 @@ countClustersL m0 = go (0, 0) m0 where
     | otherwise      = Nothing
 
   removeCluster (i, j) m =
-    removeCell (i, j) m
+    m
+    & removeCell (i, j)
     & tryRemove (i - 1, j    )
     & tryRemove (i,     j - 1)
     & tryRemove (i + 1, j    )
@@ -95,19 +96,20 @@ type MapV = Vector (Vector Bool)
 
 testMapV :: Int -> Int -> IO ()
 testMapV height width = do
-  mv <- genMapV height width
-  printMapV mv
-  print $ countClustersV mv
+  m <- genMapV height width
+  printMapV m
+  print $ countClustersV m
 
 genMapV :: Int -> Int -> IO MapV
 genMapV height width = do
   asList <- genMapL height width
   pure $
     Vector.fromList
-      [Vector.fromList v | v <- asList]
+      [Vector.fromList row | row <- asList]
 
 printMapV :: MapV -> IO ()
-printMapV v = printMapL $ map toList $ toList v
+printMapV v =
+  printMapL [toList row | row <- toList v]
 
 countClustersV :: MapV -> Natural
 countClustersV m0 = go (0, 0) m0 where
@@ -149,26 +151,38 @@ countClustersV m0 = go (0, 0) m0 where
 
   replaceAt i x v = v // [(i, x)]
 
-  modifyAt i f v = v // [(i, f $ v ! i)]
+  modifyAt i f v = v // [(i, f (v ! i))]
 
 type MapM = Vector (IOVector Bool)
 
 testMapM :: Int -> Int -> IO ()
 testMapM height width = do
-  mm <- genMapM height width
-  printMapM mm
-  c <- countClustersM mm
-  print c
+  m <- genMapV height width
+  printMapV m
+  do
+    mMut <- thawMap m
+    c <- countClustersM mMut
+    print c
+  do
+    mMut <- thawMap m
+    c <- countClustersM mMut
+    print c
 
-genMapM :: Int -> Int -> IO MapM
-genMapM height width = do
-  vv <- genMapV height width
-  for vv thaw
+thawMap :: MapV -> IO MapM
+thawMap vv = for vv thaw
 
-printMapM :: MapM -> IO ()
-printMapM m = do
-  vv <- for m freeze
-  printMapV vv
+-- for :: [a]      -> (a -> IO b) -> IO  [b]
+-- for :: Vector a -> (a -> IO b) -> IO (Vector b)
+
+(+=) :: Num a => IORef a -> a -> IO ()
+var += x = modifyIORef var (+ x)
+
+{-
+  when :: Bool -> IO () -> IO ()
+  when cond action =
+    | cond      = action
+    | otherwise = pure ()
+-}
 
 countClustersM :: MapM -> IO Natural
 countClustersM m =
@@ -178,7 +192,7 @@ countClustersM m =
       for_ [0 .. width - 1] $ \j -> do
         cell <- MVector.read (m ! i) j
         when cell $ do
-          modifyIORef c (+ 1)
+          c += 1
           removeCluster (i, j)
     readIORef c
   where
