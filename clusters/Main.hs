@@ -31,12 +31,19 @@ testMapL height width = do
   print $ countClustersL ml
 
 genMapL :: Int -> Int -> IO MapL
-genMapL height width = replicateM height $ replicateM width randomIO
+genMapL height width =
+  replicateM height $ replicateM width randomIO
 
 printMapL :: MapL -> IO ()
 printMapL m =
   putStr $
-    unlines [concat [if cell then "██" else "░░" | cell <- row] | row <- m]
+    unlines
+      [ concat
+          [ if cell then "██" else "░░"
+          | cell <- row
+          ]
+      | row <- m
+      ]
 
 countClustersL :: MapL -> Natural
 countClustersL m0 = go (0, 0) m0 where
@@ -51,7 +58,8 @@ countClustersL m0 = go (0, 0) m0 where
         | m !! i !! j -> 1
         | otherwise   -> 0
       Just ij'
-        | m !! i !! j -> 1 + go ij' (removeCluster (i, j) m)
+        | m !! i !! j ->
+            1 + go ij' (removeCluster (i, j) m)
         | otherwise   -> go ij' m
 
   next (i, j)
@@ -67,16 +75,19 @@ countClustersL m0 = go (0, 0) m0 where
     & tryRemove (i,     j + 1)
 
   tryRemove (i, j) m
-    | i >= 0, i < height, j >= 0, j < width, m !! i !! j =
+    | i >= 0, i < height, j >= 0, j < width,
+      m !! i !! j =
         removeCluster (i, j) m
     | otherwise = m
 
-  removeCell (i, j) m = modifyAt i (\row -> replaceAt j False row) m
+  removeCell (i, j) m =
+    modifyAt i (\row -> replaceAt j False row) m
 
   modifyAt i f xs =
     case splitAt i xs of
-      (before, x:after) -> before ++ [f x] ++ after
-      _                 -> error "index is out of bounds"
+      (before, x:after) ->
+        before ++ [f x] ++ after
+      _ -> error "index is out of bounds"
 
   replaceAt i x xs = modifyAt i (const x) xs
 
@@ -91,7 +102,9 @@ testMapV height width = do
 genMapV :: Int -> Int -> IO MapV
 genMapV height width = do
   asList <- genMapL height width
-  pure $ Vector.fromList $ map Vector.fromList asList
+  pure $
+    Vector.fromList
+      [Vector.fromList v | v <- asList]
 
 printMapV :: MapV -> IO ()
 printMapV v = printMapL $ map toList $ toList v
@@ -109,7 +122,8 @@ countClustersV m0 = go (0, 0) m0 where
         | m ! i ! j -> 1
         | otherwise -> 0
       Just ij'
-        | m ! i ! j -> 1 + go ij' (removeCluster (i, j) m)
+        | m ! i ! j ->
+            1 + go ij' (removeCluster (i, j) m)
         | otherwise -> go ij' m
 
   next (i, j)
@@ -125,11 +139,13 @@ countClustersV m0 = go (0, 0) m0 where
     & tryRemove (i,     j + 1)
 
   tryRemove (i, j) m
-    | i >= 0, i < height, j >= 0, j < width, m ! i ! j =
+    | i >= 0, i < height, j >= 0, j < width,
+      m ! i ! j =
         removeCluster (i, j) m
     | otherwise = m
 
-  removeCell (i, j) m = modifyAt i (\row -> replaceAt j False row) m
+  removeCell (i, j) m =
+    modifyAt i (\row -> replaceAt j False row) m
 
   replaceAt i x v = v // [(i, x)]
 
@@ -186,4 +202,5 @@ countClustersM m =
       | otherwise = pure ()
 
     removeCell :: (Int, Int) -> IO ()
-    removeCell (i, j) = MVector.write (m ! i) j False
+    removeCell (i, j) =
+      MVector.write (m ! i) j False
