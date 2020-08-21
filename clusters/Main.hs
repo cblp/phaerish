@@ -10,12 +10,15 @@ import qualified Data.Vector.Mutable as MVector
 import           Numeric.Natural     (Natural)
 import           System.Random       (randomIO)
 
+import FlatClusters (testFlatClusters)
+
 main :: IO ()
 main =
   do
     testMapL height width
     testMapV height width
     testMapM height width
+    testFlatClusters height width
   where
     height = 8
     width  = 8
@@ -73,6 +76,10 @@ countClustersL m0 = go (0, 0) m0 where
     & tryRemove (i - 1, j    )
     & tryRemove (i,     j - 1)
     & tryRemove (i + 1, j    )
+    & tryRemove (i + 1, j + 1)
+    & tryRemove (i - 1, j + 1)
+    & tryRemove (i + 1, j - 1)
+    & tryRemove (i - 1, j - 1)
     & tryRemove (i,     j + 1)
 
   tryRemove (i, j) m
@@ -138,6 +145,11 @@ countClustersV m0 = go (0, 0) m0 where
     & tryRemove (i - 1, j    )
     & tryRemove (i,     j - 1)
     & tryRemove (i + 1, j    )
+    & tryRemove (i,     j + 1)
+    & tryRemove (i + 1, j + 1)
+    & tryRemove (i - 1, j + 1)
+    & tryRemove (i + 1, j - 1)
+    & tryRemove (i - 1, j - 1)
     & tryRemove (i,     j + 1)
 
   tryRemove (i, j) m
@@ -207,6 +219,10 @@ countClustersM m =
       tryRemove (i,     j - 1)
       tryRemove (i + 1, j    )
       tryRemove (i,     j + 1)
+      tryRemove (i + 1, j + 1)
+      tryRemove (i - 1, j + 1)
+      tryRemove (i + 1, j - 1)
+      tryRemove (i - 1, j - 1)
 
     tryRemove (i, j)
       | i >= 0, i < height, j >= 0, j < width = do
