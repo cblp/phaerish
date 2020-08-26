@@ -12,6 +12,12 @@ library
   exposed-modules: Sqeq
   hs-source-dirs: lib
 
+executable list-lazy
+  import: language
+  build-depends: random
+  hs-source-dirs: list-lazy
+  main-is: Main.hs
+
 executable sqeq
   import: language
   build-depends: optparse-applicative, sqeq
@@ -31,7 +37,8 @@ test-suite tests
     tasty,
     tasty-hunit,
     -- package
-    sqeq,
+    -- sqeq,
+    list-lazy,
   hs-source-dirs: test
   main-is: Tests.hs
   type: exitcode-stdio-1.0
