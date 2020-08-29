@@ -1,7 +1,6 @@
 module ListLazy where
 
 replicate' :: Int -> a -> [a]
-replicate' 0 _ = []
 replicate' i p | i > 0 = p : replicate' (i - 1) p
                | otherwise = []
 
