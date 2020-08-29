@@ -3,7 +3,7 @@ module ListLazy where
 replicate' :: Int -> a -> [a]
 replicate' 0 _ = []
 replicate' i p | i > 0 = p : replicate' (i - 1) p
-               | otherwise = error "reoplicate count is less then 0"
+               | otherwise = []
 
 zip' :: [a] -> [b] -> [(a, b)]
 zip' (x:xs) (y:ys) = (x, y) : zip xs ys
@@ -13,9 +13,8 @@ enumerate' :: [a] -> [(Integer, a)]
 enumerate' = zip' [0 ..]
 
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' _ [] _ = []
-zipWith' _ _ [] = []
 zipWith' f (x:xs) (y:ys) = f x y : zipWith' f xs ys
+zipWith' _ _ _ = []
 
 data Longest a b = These a b
   | This a

@@ -21,6 +21,8 @@ listLazyTests = testGroup "ListLazy"
       replicate' 5 'a' @?= "aaaaa"
   , testCase "replicate 0 'a' -> []" $
       replicate 0 'a' @?= ""
+  , testCase "replicate (- 1) 'a' -> []" $
+      replicate (- 1) 'a' @?= []
   , testCase "zip' [1.. ] \"abc\" -> [(1, 'a'), (2, 'b'), (3, 'c')]" $
       zip' [1 .. ] "abc" @?= [(1, 'a'), (2, 'b'), (3, 'c')]
   , testCase "zip' \"abc\" [1.. ] -> [('a', 1), ('b', 2), ('c', 3)]" $
