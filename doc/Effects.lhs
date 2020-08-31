@@ -1,16 +1,12 @@
-> {-# OPTIONS -Wall #-}
+> {-# OPTIONS -Wall -Wno-unused-imports #-}
 
 > {-# LANGUAGE InstanceSigs #-}
 
 -- $> :set -XFlexibleContexts -XNoStarIsType
 
 > import           Prelude hiding (
->                    Applicative (..),
 >                    Either (..),
->                    Functor (..),
 >                    Maybe (..),
->                    Monad (..),
->                    (<$>),
 >                  )
 
 > import           Data.Vector (Vector)
@@ -18,38 +14,38 @@
 
 --------------------------------------------------
 
-% -- $> map (+ 1) [3, 15, 9, 20]
+-- $> map (+ 1) [3, 15, 9, 20]
 
-% {- $>
-%   Vector.map (+ 1) $
-%     Vector.fromList [3, 15, 9, 20]
-% <$ -}
+{- $>
+  Vector.map (+ 1) $
+    Vector.fromList [3, 15, 9, 20]
+<$ -}
 
-% -- $> :t map
+-- $> :t map
 
-% -- $> :t map (+ 1)
+-- $> :t map (+ 1)
 
 --------------------------------------------------
 
-> class Functor f where
->   fmap :: (a -> b) -> f a -> f b
+< class Functor f where
+<   fmap :: (a -> b) -> f a -> f b
 
-> instance Functor [] where
->   fmap :: (a -> b) -> [a] -> [b]
->   fmap = map
+< instance Functor [] where
+<   fmap :: (a -> b) -> [a] -> [b]
+<   fmap = map
 
-% > instance Functor Vector where
-% >   fmap :: (a -> b) -> Vector a -> Vector b
-% >   fmap = Vector.map
+< instance Functor Vector where
+<   fmap :: (a -> b) -> Vector a -> Vector b
+<   fmap = Vector.map
 
-% -- $> :t fmap (+ 1)
+-- $> :t fmap (+ 1)
 
-> (<$>) :: Functor f => (a -> b) -> f a -> f b
-> (<$>) = fmap
+< (<$>) :: Functor f => (a -> b) -> f a -> f b
+< (<$>) = fmap
 
-% -- $> (+ 1) <$> [3, 15, 9, 20]
+-- $> (+ 1) <$> [3, 15, 9, 20]
 
-% -- $> (+ 1) <$> Vector.fromList [3, 15, 9, 20]
+-- $> (+ 1) <$> Vector.fromList [3, 15, 9, 20]
 
 --------------------------------------------------
 
@@ -127,20 +123,20 @@
 >     Nothing -> Nothing
 >     Just a  -> Just (f a)
 
-% -- $> (+ 1) <$> Nothing
+-- $> (+ 1) <$> Nothing
 
-% -- $> (+ 1) <$> Just 100
+-- $> (+ 1) <$> Just 100
 
 --------------------------------------------------
 
 > data Either a b = Left a | Right b
 >   deriving (Show)
 
-% -- $> :kind Either
+-- $> :kind Either
 
-% -- $> :kind Either Bool Char
+-- $> :kind Either Bool Char
 
-% -- $> :kind Either Bool
+-- $> :kind Either Bool
 
 > instance Functor (Either c) where
 >   fmap :: (a -> b) -> Either c a -> Either c b
@@ -148,13 +144,13 @@
 >     Left c  -> Left c
 >     Right a -> Right (f a)
 
-% {- $>
-%   (+ 1) <$>
-%   Left
-%     "These aren't the droids you're looking for"
-% <$ -}
+{- $>
+  (+ 1) <$>
+  Left
+    "These aren't the droids you're looking for"
+<$ -}
 
-% -- $> (+ 1) <$> Right 114
+-- $> (+ 1) <$> Right 114
 
 --------------------------------------------------
 
@@ -176,9 +172,9 @@
 > isTemperatureGood :: Reader Integer Bool
 > isTemperatureGood = R $ \t -> t > 0 && t < 30
 
-% -- $> runReader isTemperatureGood 10
+-- $> runReader isTemperatureGood 10
 
-% -- $> runReader isTemperatureGood 100
+-- $> runReader isTemperatureGood 100
 
 > instance Functor (Reader r) where
 >   fmap :: (a -> b) -> Reader r a -> Reader r b
@@ -187,9 +183,9 @@
 > isTemperatureBad :: Reader Integer Bool
 > isTemperatureBad = not <$> isTemperatureGood
 
-% -- $> runReader isTemperatureBad 10
+-- $> runReader isTemperatureBad 10
 
-% -- $> runReader isTemperatureBad 100
+-- $> runReader isTemperatureBad 100
 
 Недетерминированность — вариативность
 -------------------------------------
@@ -215,15 +211,15 @@
 
 --------------------------------------------------
 
-> class Applicative f where
->
->   pure :: a -> f a
->
->   (<*>) :: f (a -> b) -> f a -> f b
->   (<*>) = liftA2 id
->
->   liftA2 :: (a -> b -> c) -> f a -> f b -> f c
->   liftA2 f x y = pure f <*> x <*> y
+< class Applicative f where
+<
+<   pure :: a -> f a
+<
+<   (<*>) :: f (a -> b) -> f a -> f b
+<   (<*>) = liftA2 id
+<
+<   liftA2 :: (a -> b -> c) -> f a -> f b -> f c
+<   liftA2 f x y = pure f <*> x <*> y
 
 Неопределённость/Невычислимость/Незавершимость
 ----------------------------------------------
@@ -237,9 +233,9 @@
 >   Just f <*> Just x = Just $ f x
 >   _      <*> _      = Nothing
 
-% -- $> liftA2 (+) Nothing (Just 212)
+-- $> liftA2 (+) Nothing (Just 212)
 
-% -- $> liftA2 (+) (Just 213) (Just 214)
+-- $> liftA2 (+) (Just 213) (Just 214)
 
 <       (<$>)   :: (a -> b) -> f a -> f b
 <      f <$> ax :: f b
@@ -326,13 +322,13 @@
 
 --------------------------------------------------
 
-> instance Applicative [] where
->
->   pure :: a -> [a]
->   pure x = [x]
->
->   (<*>) :: [a -> b] -> [a] -> [b]
->   fs <*> xs = [f x | f <- fs, x <- xs]
+< instance Applicative [] where
+<
+<   pure :: a -> [a]
+<   pure x = [x]
+<
+<   (<*>) :: [a -> b] -> [a] -> [b]
+<   fs <*> xs = [f x | f <- fs, x <- xs]
 
 -- $> roll2d6 = (+) <$> d6 <*> d6
 
@@ -461,8 +457,8 @@ logic
 
 --------------------------------------------------
 
-> class Monad m where
->   (>>=) :: m a -> (a -> m b) -> m b
+< class Monad m where
+<   (>>=) :: m a -> (a -> m b) -> m b
 
 --------------------------------------------------
 
@@ -484,6 +480,27 @@ logic
 
 > data State s a = S (s -> (a, s))
 
+> instance Functor (State s) where
+>   fmap :: (a -> b) -> State s a -> State s b
+>   fmap f (S act) =
+>     S $ \s0 -> let (a, s1) = act s0 in (f a, s1)
+
+> instance Applicative (State s) where
+>
+>   pure :: a -> State s a
+>   pure a = S $ \s -> (a, s)
+>
+>   (<*>)
+>     :: State s (a -> b)
+>     -> State s a
+>     -> State s b
+>   S sf <*> S sx =
+>     S $
+>       \s0 ->
+>         let (f, s1) = sf s0
+>             (x, s2) = sx s1
+>         in  (f x, s2)
+
 > instance Monad (State s) where
 >   (>>=)
 >     :: State s a
@@ -504,15 +521,22 @@ logic
 
 -- $> runState getUnique 0
 
-> pureState :: a -> State s a
-> pureState a = S $ \s -> (a, s)
-
 {- $>
   runState
     ( getUnique >>= \x ->
       getUnique >>= \y ->
       getUnique >>= \z ->
-      pureState [x, y, z] )
+      pure [x, y, z] )
+    0
+<$ -}
+
+{- $>
+  runState
+    (do
+      x <- getUnique
+      y <- getUnique
+      z <- getUnique
+      pure [x, y, z])
     0
 <$ -}
 
@@ -529,7 +553,7 @@ logic
 ──────────────┼───────────────┼─────────┼───────
 Нет побочки   │ Лишний выход  │ Writer  │ + + ?
               ├───────────────┼─────────┼───────
-              │ Лишний выход  │ State   │ ? ? ➕
+              │ Лишний выход  │ State   │ ➕➕➕
               │ + зависимость │         │
 
 --------------------------------------------------
@@ -550,7 +574,7 @@ logic
 ──────────────┼───────────────┼───────────┼───────
 Нет побочки   │ Лишний выход  │ Writer    │ + + ?
               ├───────────────┼───────────┼───────
-              │ Лишний выход  │ State     │ ? ? ➕
+              │ Лишний выход  │ State     │ + + +
               │ + зависимость │           │
 ──────────────┼───────────────┼───────────┼───────
 ничего        │ всё           │ IO        │ ⊕ ⊕ ⊕
