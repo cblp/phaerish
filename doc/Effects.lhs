@@ -31,9 +31,9 @@
 > class Functor f where
 >   fmap :: (a -> b) -> f a -> f b
 
-% > instance Functor [] where
-% >   fmap :: (a -> b) -> [a] -> [b]
-% >   fmap = map
+> instance Functor [] where
+>   fmap :: (a -> b) -> [a] -> [b]
+>   fmap = map
 
 % > instance Functor Vector where
 % >   fmap :: (a -> b) -> Vector a -> Vector b
@@ -163,29 +163,29 @@
 Недетерминированность — неявная зависимость
 -------------------------------------------
 
-< type Reader a b = a -> b
+< type Reader r a = r -> a
 
-% > data Reader a b = Reader (a -> b)
+> data Reader r a = Reader (r -> a)
 
-% > runReader :: Reader a b -> a -> b
-% > runReader (Reader f) = f
+> runReader :: Reader r a -> r -> a
+> runReader (Reader f) = f
 
-% {- $>
-%   isTemperatureGood =
-%     Reader $ \t -> t > 0 && t < 30
-% <$ -}
+{- $>
+  isTemperatureGood =
+    Reader $ \t -> t > 0 && t < 30
+<$ -}
 
 % -- $> runReader isTemperatureGood 10
 
 % -- $> runReader isTemperatureGood 100
 
-% > instance Functor (Reader c) where
-% >   fmap :: (a -> b) -> Reader c a -> Reader c b
-% >   fmap f (Reader g) = Reader $ f . g
+> instance Functor (Reader r) where
+>   fmap :: (a -> b) -> Reader r a -> Reader r b
+>   fmap f (Reader g) = Reader $ f . g
 
-% {- $>
-%   isTemperatureBad = not <$> isTemperatureGood
-% <$ -}
+{- $>
+  isTemperatureBad = not <$> isTemperatureGood
+<$ -}
 
 % -- $> runReader isTemperatureBad 10
 
@@ -196,9 +196,11 @@
 
 < data [] a = [] | a : [a]
 
-% -- $> d6 = [1..6]
+-- $> d6 = [1..6]
 
-% -- $> (2 *) <$> d6
+-- $> roll2d6 = (2 *) <$> d6
+
+-- $> roll2d6
 
 --------------------------------------------------
 
@@ -275,12 +277,160 @@
 --------------------------------------------------
 
 Чистота           │ Эффект        │ Тип     │ F A
-━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━
+━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━━
+Завершимость      │ Остановка     │ Maybe   │ + ➕
+                  │               │ Either  │ + ➕
+──────────────────┼───────────────┼─────────┼─────
+Детерминированн.  │ Зависимость   │ Reader  │ +
+                  ├───────────────┼─────────┼─────
+                  │ Вариативность │ []      │ +
+
+--------------------------------------------------
+
+> instance Applicative (Reader r) where
+>
+>   pure :: a -> Reader r a
+>   pure a = Reader $ \r -> a
+>
+>   (<*>)
+>     :: Reader r (a -> b)
+>     -> Reader r a
+>     -> Reader r b
+>   Reader f <*> Reader x =
+>     Reader $ \r -> (f r) (x r)
+
+-- $> :t (,)
+
+-- $> (,) "foo" "bar"
+
+{- $>
+  isTemperatureGoodOrBad =
+    (||)
+    <$> isTemperatureGood
+    <*> isTemperatureBad
+<$ -}
+
+-- $> runReader isTemperatureGoodOrBad 10
+
+-- $> runReader isTemperatureGoodOrBad 100
+
+--------------------------------------------------
+
+Чистота           │ Эффект        │ Тип     │ F A
+━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━━
 Завершимость      │ Остановка     │ Maybe   │ + +
                   │               │ Either  │ + +
-──────────────────┼───────────────┼─────────┼────
-Детерминированн.  │ Зависимость   │ Reader  │ +
-                  ├───────────────┼─────────┼────
+──────────────────┼───────────────┼─────────┼─────
+Детерминированн.  │ Зависимость   │ Reader  │ + ➕
+                  ├───────────────┼─────────┼─────
                   │ Вариативность │ []      │ +
+
+--------------------------------------------------
+
+> instance Applicative [] where
+>
+>   pure :: a -> [a]
+>   pure x = [x]
+>
+>   (<*>) :: [a -> b] -> [a] -> [b]
+>   fs <*> xs = [f x | f <- fs, x <- xs]
+
+-- $> roll2d6 = (+) <$> d6 <*> d6
+
+-- $> roll2d6
+
+-- $> Data.List.nub roll2d6
+
+--------------------------------------------------
+
+Чистота           │ Эффект        │ Тип     │ F A
+━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━━
+Завершимость      │ Остановка     │ Maybe   │ + +
+                  │               │ Either  │ + +
+──────────────────┼───────────────┼─────────┼─────
+Детерминированн.  │ Зависимость   │ Reader  │ + +
+                  ├───────────────┼─────────┼─────
+                  │ Вариативность │ []      │ + ➕
+
+--------------------------------------------------
+
+Побочные эффекты
+================
+
+Неявный результат
+
+> data Writer w a = Writer (a, w)
+>   deriving (Show)
+
+{- $>
+  addWithLog x y =
+    Writer (x + y, ["x = " <> show x, "y = " <> show y])
+<$ -}
+
+-- $> addWithLog 3 15
+
+--------------------------------------------------
+
+> instance Functor (Writer w) where
+>   fmap :: (a -> b) -> Writer w a -> Writer w b
+>   fmap f (Writer (a, w)) = Writer (f a, w)
+
+-- $> show <$> addWithLog 3 15
+
+-- $> show <$> ((+ 1) <$> addWithLog 3 15)
+
+--------------------------------------------------
+
+< instance Applicative (Writer w) where
+<
+<   pure :: a -> Writer w a
+<   pure a = Writer (a, _)
+
+--------------------------------------------------
+
+< class Monoid m where
+<   (<>) :: m -> m -> m
+<   mempty :: m
+
+-- $> mempty :: String
+
+-- $> "hell" <> "o"
+
+--------------------------------------------------
+
+> instance Monoid w => Applicative (Writer w)
+>   where
+>
+>   pure :: a -> Writer w a
+>   pure a = Writer (a, mempty)
+>
+>   (<*>)
+>     :: Writer w (a -> b)
+>     -> Writer w a
+>     -> Writer w b
+>   Writer (f, w1) <*> Writer (x, w2) =
+>     Writer (f x, w1 <> w2)
+
+> makeWithLog name value =
+>   Writer (value, [name <> " = " <> show value])
+
+-- $> x = makeWithLog "x" 415
+
+-- $> y = makeWithLog "y" 419
+
+-- $> (+) <$> x <*> y
+
+--------------------------------------------------
+
+Чистота           │ Эффект        │ Тип     │ F A
+━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━━
+Завершимость      │ Остановка     │ Maybe   │ + +
+                  │               │ Either  │ + +
+──────────────────┼───────────────┼─────────┼─────
+Детерминированн.  │ Зависимость   │ Reader  │ + +
+                  ├───────────────┼─────────┼─────
+                  │ Вариативность │ []      │ + +
+──────────────────┼───────────────┼─────────┼─────
+Нет побочки       │ Лишний выход  │ Writer  │ ➕➕
 
 --------------------------------------------------
