@@ -1,6 +1,6 @@
 > {-# LANGUAGE InstanceSigs #-}
 
--- $> :set -XNoStarIsType
+-- $> :set -XFlexibleContexts -XNoStarIsType
 
 > import           Prelude hiding (
 >                    Applicative(..),
@@ -139,11 +139,11 @@
 
 % -- $> :kind Either Bool
 
-% > instance Functor (Either c) where
-% >   fmap :: (a -> b) -> Either c a -> Either c b
-% >   fmap f e = case e of
-% >     Left c  -> Left c
-% >     Right a -> Right (f a)
+> instance Functor (Either c) where
+>   fmap :: (a -> b) -> Either c a -> Either c b
+>   fmap f e = case e of
+>     Left c  -> Left c
+>     Right a -> Right (f a)
 
 % {- $>
 %   (+ 1) <$>
@@ -244,19 +244,19 @@
 
 --------------------------------------------------
 
-% > instance Applicative (Either c) where
-% >
-% >   pure :: a -> Either c a
-% >   pure = Right
-% >
-% >   (<*>)
-% >     :: Either c (a -> b)
-% >     -> Either c a
-% >     -> Either c b
-% >   Right f <*> Right x = Right $ f x
-% >   Left  c <*> _       = Left c
-% >   _       <*> Left c  = Left c
+> instance Applicative (Either c) where
+>
+>   pure :: a -> Either c a
+>   pure = Right
+>
+>   (<*>)
+>     :: Either c (a -> b)
+>     -> Either c a
+>     -> Either c b
+>   Right f <*> Right x = Right $ f x
+>   Left  c <*> _       = Left c
+>   _       <*> Left c  = Left c
 
-% -- $> liftA2 (+) (Left "Nope") (Right 212)
+-- $> (+) <$> Left "Nope" <*> Right 212
 
-% -- $> liftA2 (+) (Right 213) (Right 214)
+-- $> (+) <$> Right 213 <*> Right 214
