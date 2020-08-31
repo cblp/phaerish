@@ -14,16 +14,16 @@
 
 --------------------------------------------------
 
--- $> map (+ 1) [3, 15, 9, 20]
+% -- $> map (+ 1) [3, 15, 9, 20]
 
-{- $>
-  Vector.map (+ 1) $
-    Vector.fromList [3, 15, 9, 20]
-<$ -}
+% {- $>
+%   Vector.map (+ 1) $
+%     Vector.fromList [3, 15, 9, 20]
+% <$ -}
 
--- $> :t map
+% -- $> :t map
 
--- $> :t map (+ 1)
+% -- $> :t map (+ 1)
 
 --------------------------------------------------
 
@@ -38,14 +38,14 @@
 <   fmap :: (a -> b) -> Vector a -> Vector b
 <   fmap = Vector.map
 
--- $> :t fmap (+ 1)
+% -- $> :t fmap (+ 1)
 
 < (<$>) :: Functor f => (a -> b) -> f a -> f b
 < (<$>) = fmap
 
--- $> (+ 1) <$> [3, 15, 9, 20]
+% -- $> (+ 1) <$> [3, 15, 9, 20]
 
--- $> (+ 1) <$> Vector.fromList [3, 15, 9, 20]
+% -- $> (+ 1) <$> Vector.fromList [3, 15, 9, 20]
 
 --------------------------------------------------
 
@@ -123,20 +123,20 @@
 >     Nothing -> Nothing
 >     Just a  -> Just (f a)
 
--- $> (+ 1) <$> Nothing
+% -- $> (+ 1) <$> Nothing
 
--- $> (+ 1) <$> Just 100
+% -- $> (+ 1) <$> Just 100
 
 --------------------------------------------------
 
 > data Either a b = Left a | Right b
 >   deriving (Show)
 
--- $> :kind Either
+% -- $> :kind Either
 
--- $> :kind Either Bool Char
+% -- $> :kind Either Bool Char
 
--- $> :kind Either Bool
+% -- $> :kind Either Bool
 
 > instance Functor (Either c) where
 >   fmap :: (a -> b) -> Either c a -> Either c b
@@ -144,13 +144,13 @@
 >     Left c  -> Left c
 >     Right a -> Right (f a)
 
-{- $>
-  (+ 1) <$>
-  Left
-    "These aren't the droids you're looking for"
-<$ -}
+% {- $>
+%   (+ 1) <$>
+%   Left
+%     "These aren't the droids you're looking for"
+% <$ -}
 
--- $> (+ 1) <$> Right 114
+% -- $> (+ 1) <$> Right 114
 
 --------------------------------------------------
 
@@ -172,9 +172,9 @@
 > isTemperatureGood :: Reader Integer Bool
 > isTemperatureGood = R $ \t -> t > 0 && t < 30
 
--- $> runReader isTemperatureGood 10
+% -- $> runReader isTemperatureGood 10
 
--- $> runReader isTemperatureGood 100
+% -- $> runReader isTemperatureGood 100
 
 > instance Functor (Reader r) where
 >   fmap :: (a -> b) -> Reader r a -> Reader r b
@@ -183,20 +183,22 @@
 > isTemperatureBad :: Reader Integer Bool
 > isTemperatureBad = not <$> isTemperatureGood
 
--- $> runReader isTemperatureBad 10
+% -- $> runReader isTemperatureBad 10
 
--- $> runReader isTemperatureBad 100
+% -- $> runReader isTemperatureBad 100
 
 Недетерминированность — вариативность
 -------------------------------------
 
 < data [] a = [] | a : [a]
 
--- $> d6 = [1..6]
+> d6 :: [Integer]
+> d6 = [1..6]
 
--- $> roll2d6 = (2 *) <$> d6
+> roll2d6_wrong :: [Integer]
+> roll2d6_wrong = (2 *) <$> d6
 
--- $> roll2d6
+% -- $> roll2d6_wrong
 
 --------------------------------------------------
 
@@ -233,9 +235,9 @@
 >   Just f <*> Just x = Just $ f x
 >   _      <*> _      = Nothing
 
--- $> liftA2 (+) Nothing (Just 212)
+% -- $> liftA2 (+) Nothing (Just 212)
 
--- $> liftA2 (+) (Just 213) (Just 214)
+% -- $> liftA2 (+) (Just 213) (Just 214)
 
 <       (<$>)   :: (a -> b) -> f a -> f b
 <      f <$> ax :: f b
@@ -247,9 +249,9 @@
 
 < f <$> ax == pure f <*> ax
 
--- $> (+) <$> Nothing <*> Just 212
+% -- $> (+) <$> Nothing <*> Just 212
 
--- $> (+) <$> Just 213 <*> Just 214
+% -- $> (+) <$> Just 213 <*> Just 214
 
 --------------------------------------------------
 
@@ -266,9 +268,9 @@
 >   Left  c <*> _       = Left c
 >   _       <*> Left c  = Left c
 
--- $> (+) <$> Left "Nope" <*> Right 212
+% -- $> (+) <$> Left "Nope" <*> Right 212
 
--- $> (+) <$> Right 213 <*> Right 214
+% -- $> (+) <$> Right 213 <*> Right 214
 
 --------------------------------------------------
 
@@ -294,20 +296,19 @@
 >     -> Reader r b
 >   R f <*> R x = R $ \r -> (f r) (x r)
 
--- $> :t (,)
+% -- $> :t (,)
 
--- $> (,) "foo" "bar"
+% -- $> (,) "foo" "bar"
 
-{- $>
-  isTemperatureGoodOrBad =
-    (||)
-    <$> isTemperatureGood
-    <*> isTemperatureBad
-<$ -}
+> isTemperatureGoodOrBad :: Reader Integer Bool
+> isTemperatureGoodOrBad =
+>   (||)
+>   <$> isTemperatureGood
+>   <*> isTemperatureBad
 
--- $> runReader isTemperatureGoodOrBad 10
+% -- $> runReader isTemperatureGoodOrBad 10
 
--- $> runReader isTemperatureGoodOrBad 100
+% -- $> runReader isTemperatureGoodOrBad 100
 
 --------------------------------------------------
 
@@ -330,11 +331,12 @@
 <   (<*>) :: [a -> b] -> [a] -> [b]
 <   fs <*> xs = [f x | f <- fs, x <- xs]
 
--- $> roll2d6 = (+) <$> d6 <*> d6
+> roll2d6 :: [Integer]
+> roll2d6 = (+) <$> d6 <*> d6
 
--- $> roll2d6
+% -- $> roll2d6
 
--- $> Data.List.nub roll2d6
+% -- $> Data.List.nub roll2d6
 
 --------------------------------------------------
 
@@ -368,7 +370,7 @@
 >     , ["x = " <> show x, "y = " <> show y]
 >     )
 
--- $> addWithLog 3 15
+% -- $> addWithLog 3 15
 
 --------------------------------------------------
 
@@ -376,9 +378,9 @@
 >   fmap :: (a -> b) -> Writer w a -> Writer w b
 >   fmap f (W (a, w)) = W (f a, w)
 
--- $> show <$> addWithLog 3 15
+% -- $> show <$> addWithLog 3 15
 
--- $> show <$> ((+ 1) <$> addWithLog 3 15)
+% -- $> show <$> ((+ 1) <$> addWithLog 3 15)
 
 --------------------------------------------------
 
@@ -393,9 +395,9 @@
 <   (<>) :: m -> m -> m
 <   mempty :: m
 
--- $> mempty :: String
+% -- $> mempty :: String
 
--- $> "hell" <> "o"
+% -- $> "hell" <> "o"
 
 --------------------------------------------------
 
@@ -416,11 +418,11 @@
 > makeWithLog name value =
 >   W (value, [name <> " = " <> show value])
 
--- $> x = makeWithLog "x" 415
+% -- $> x = makeWithLog "x" 415
 
--- $> y = makeWithLog "y" 419
+% -- $> y = makeWithLog "y" 419
 
--- $> (+) <$> x <*> y
+% -- $> (+) <$> x <*> y
 
 --------------------------------------------------
 
@@ -519,26 +521,26 @@ logic
 > getUnique :: State Integer Integer
 > getUnique = S $ \n -> (n, n + 1)
 
--- $> runState getUnique 0
+% -- $> runState getUnique 0
 
-{- $>
-  runState
-    ( getUnique >>= \x ->
-      getUnique >>= \y ->
-      getUnique >>= \z ->
-      pure [x, y, z] )
-    0
-<$ -}
+% {- $>
+%   runState
+%     ( getUnique >>= \x ->
+%       getUnique >>= \y ->
+%       getUnique >>= \z ->
+%       pure [x, y, z] )
+%     0
+% <$ -}
 
-{- $>
-  runState
-    (do
-      x <- getUnique
-      y <- getUnique
-      z <- getUnique
-      pure [x, y, z])
-    0
-<$ -}
+% {- $>
+%   runState
+%     (do
+%       x <- getUnique
+%       y <- getUnique
+%       z <- getUnique
+%       pure [x, y, z])
+%     0
+% <$ -}
 
 --------------------------------------------------
 
