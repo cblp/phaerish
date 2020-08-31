@@ -1,3 +1,5 @@
+> {-# OPTIONS -Wall #-}
+
 > {-# LANGUAGE InstanceSigs #-}
 
 -- $> :set -XFlexibleContexts -XNoStarIsType
@@ -166,15 +168,13 @@
 
 < type Reader r a = r -> a
 
-> data Reader r a = Reader (r -> a)
+> data Reader r a = R (r -> a)
 
 > runReader :: Reader r a -> r -> a
-> runReader (Reader f) = f
+> runReader (R f) = f
 
-{- $>
-  isTemperatureGood =
-    Reader $ \t -> t > 0 && t < 30
-<$ -}
+> isTemperatureGood :: Reader Integer Bool
+> isTemperatureGood = R $ \t -> t > 0 && t < 30
 
 % -- $> runReader isTemperatureGood 10
 
@@ -182,11 +182,10 @@
 
 > instance Functor (Reader r) where
 >   fmap :: (a -> b) -> Reader r a -> Reader r b
->   fmap f (Reader g) = Reader $ f . g
+>   fmap f (R g) = R $ f . g
 
-{- $>
-  isTemperatureBad = not <$> isTemperatureGood
-<$ -}
+> isTemperatureBad :: Reader Integer Bool
+> isTemperatureBad = not <$> isTemperatureGood
 
 % -- $> runReader isTemperatureBad 10
 
@@ -291,14 +290,13 @@
 > instance Applicative (Reader r) where
 >
 >   pure :: a -> Reader r a
->   pure a = Reader $ \r -> a
+>   pure a = R $ \_ -> a
 >
 >   (<*>)
 >     :: Reader r (a -> b)
 >     -> Reader r a
 >     -> Reader r b
->   Reader f <*> Reader x =
->     Reader $ \r -> (f r) (x r)
+>   R f <*> R x = R $ \r -> (f r) (x r)
 
 -- $> :t (,)
 
@@ -362,13 +360,17 @@
 
 < type Writer w a = (a, w)
 
-> data Writer w a = Writer (a, w)
+> data Writer w a = W (a, w)
 >   deriving (Show)
 
-{- $>
-  addWithLog x y =
-    Writer (x + y, ["x = " <> show x, "y = " <> show y])
-<$ -}
+> addWithLog
+>   :: Integer
+>   -> Integer
+>   -> Writer [String] Integer
+> addWithLog x y =
+>   W ( x + y
+>     , ["x = " <> show x, "y = " <> show y]
+>     )
 
 -- $> addWithLog 3 15
 
@@ -376,7 +378,7 @@
 
 > instance Functor (Writer w) where
 >   fmap :: (a -> b) -> Writer w a -> Writer w b
->   fmap f (Writer (a, w)) = Writer (f a, w)
+>   fmap f (W (a, w)) = W (f a, w)
 
 -- $> show <$> addWithLog 3 15
 
@@ -387,7 +389,7 @@
 < instance Applicative (Writer w) where
 <
 <   pure :: a -> Writer w a
-<   pure a = Writer (a, _)
+<   pure a = W (a, _)
 
 --------------------------------------------------
 
@@ -405,17 +407,18 @@
 >   where
 >
 >   pure :: a -> Writer w a
->   pure a = Writer (a, mempty)
+>   pure a = W (a, mempty)
 >
 >   (<*>)
 >     :: Writer w (a -> b)
 >     -> Writer w a
 >     -> Writer w b
->   Writer (f, w1) <*> Writer (x, w2) =
->     Writer (f x, w1 <> w2)
+>   W (f, w1) <*> W (x, w2) = W (f x, w1 <> w2)
 
+> makeWithLog
+>   :: Show a => String -> a -> Writer [String] a
 > makeWithLog name value =
->   Writer (value, [name <> " = " <> show value])
+>   W (value, [name <> " = " <> show value])
 
 -- $> x = makeWithLog "x" 415
 
@@ -479,29 +482,30 @@ logic
 
 < type State s a = s -> (a, s)
 
-> data State s a = State (s -> (a, s))
+> data State s a = S (s -> (a, s))
 
 > instance Monad (State s) where
 >   (>>=)
 >     :: State s a
 >     -> (a -> State s b)
 >     -> State s b
->   State act1 >>= k =
->     State $
+>   S act1 >>= k =
+>     S $
 >       \s0 ->
 >         let (a, s1) = act1 s0
->             State act2 = k a
+>             S act2 = k a
 >         in  act2 s1
 
 > runState :: State s a -> s -> (a, s)
-> runState (State act) = act
+> runState (S act) = act
 
-> getUnique = State $ \n -> (n, n + 1)
+> getUnique :: State Integer Integer
+> getUnique = S $ \n -> (n, n + 1)
 
 -- $> runState getUnique 0
 
 > pureState :: a -> State s a
-> pureState a = State $ \s -> (a, s)
+> pureState a = S $ \s -> (a, s)
 
 {- $>
   runState
@@ -527,5 +531,30 @@ logic
               ├───────────────┼─────────┼───────
               │ Лишний выход  │ State   │ ? ? ➕
               │ + зависимость │         │
+
+--------------------------------------------------
+
+> data Identity a = I a
+>   deriving (Show)
+
+--------------------------------------------------
+
+Чистота       │ Эффект        │ Тип       │ F A M
+━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━┿━━━━━━━
+Завершимость  │ Остановка     │ Maybe     │ + + ?
+              │               │ Either    │ + + ?
+──────────────┼───────────────┼───────────┼───────
+Детерминиров. │ Зависимость   │ Reader    │ + + ?
+              ├───────────────┼───────────┼───────
+              │ Вариативность │ []        │ + + ?
+──────────────┼───────────────┼───────────┼───────
+Нет побочки   │ Лишний выход  │ Writer    │ + + ?
+              ├───────────────┼───────────┼───────
+              │ Лишний выход  │ State     │ ? ? ➕
+              │ + зависимость │           │
+──────────────┼───────────────┼───────────┼───────
+ничего        │ всё           │ IO        │ ⊕ ⊕ ⊕
+──────────────┼───────────────┼───────────┼───────
+всё           │ ничего        │ Identity  │ ? ? ?
 
 --------------------------------------------------
