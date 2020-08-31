@@ -3,10 +3,11 @@
 -- $> :set -XFlexibleContexts -XNoStarIsType
 
 > import           Prelude hiding (
->                    Applicative(..),
->                    Either(..),
->                    Functor(..),
->                    Maybe(..),
+>                    Applicative (..),
+>                    Either (..),
+>                    Functor (..),
+>                    Maybe (..),
+>                    Monad (..),
 >                    (<$>),
 >                  )
 
@@ -359,6 +360,8 @@
 
 Неявный результат
 
+< type Writer w a = (a, w)
+
 > data Writer w a = Writer (a, w)
 >   deriving (Show)
 
@@ -432,5 +435,97 @@
                   │ Вариативность │ []      │ + +
 ──────────────────┼───────────────┼─────────┼─────
 Нет побочки       │ Лишний выход  │ Writer  │ ➕➕
+
+--------------------------------------------------
+
+getConfig
+  │
+  │ config
+  ↓
+getConfigParam config "source"
+  │
+  │ source
+  ↓
+getSomeData source
+  │
+  │ someData
+  ↓
+logic
+
+--------------------------------------------------
+
+(f a)  ???  (a -> f b)
+
+--------------------------------------------------
+
+> class Monad m where
+>   (>>=) :: m a -> (a -> m b) -> m b
+
+--------------------------------------------------
+
+< getConfig >>=
+<   \config ->
+<      getConfigParam config "source" >>=
+<      \source ->
+<        getSomeData source >>=
+<        \someData -> logic
+
+< getConfig >>= \config ->
+< getConfigParam config "source" >>= \source ->
+< getSomeData source >>= \someData ->
+< logic
+
+--------------------------------------------------
+
+< type State s a = s -> (a, s)
+
+> data State s a = State (s -> (a, s))
+
+> instance Monad (State s) where
+>   (>>=)
+>     :: State s a
+>     -> (a -> State s b)
+>     -> State s b
+>   State act1 >>= k =
+>     State $
+>       \s0 ->
+>         let (a, s1) = act1 s0
+>             State act2 = k a
+>         in  act2 s1
+
+> runState :: State s a -> s -> (a, s)
+> runState (State act) = act
+
+> getUnique = State $ \n -> (n, n + 1)
+
+-- $> runState getUnique 0
+
+> pureState :: a -> State s a
+> pureState a = State $ \s -> (a, s)
+
+{- $>
+  runState
+    ( getUnique >>= \x ->
+      getUnique >>= \y ->
+      getUnique >>= \z ->
+      pureState [x, y, z] )
+    0
+<$ -}
+
+--------------------------------------------------
+
+Чистота       │ Эффект        │ Тип     │ F A M
+━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━┿━━━━━━━
+Завершимость  │ Остановка     │ Maybe   │ + + ?
+              │               │ Either  │ + + ?
+──────────────┼───────────────┼─────────┼───────
+Детерминиров. │ Зависимость   │ Reader  │ + + ?
+              ├───────────────┼─────────┼───────
+              │ Вариативность │ []      │ + + ?
+──────────────┼───────────────┼─────────┼───────
+Нет побочки   │ Лишний выход  │ Writer  │ + + ?
+              ├───────────────┼─────────┼───────
+              │ Лишний выход  │ State   │ ? ? ➕
+              │ + зависимость │         │
 
 --------------------------------------------------
