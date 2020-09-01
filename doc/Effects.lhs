@@ -492,14 +492,18 @@ logic
 < class Monad m where
 <   (>>=) :: m a -> (a -> m b) -> m b
 
+< (>=>)
+<   :: Monad m
+<   => (a -> m b) -> (b -> m c) -> a -> m c
+< m >=> n = \a -> m a >>= n
+
 Законы
 
   Left identity
-    pure a >>= k == k a
+    pure >=> m == m
   Right identity
-    m >>= pure == m
+    m >=> pure == m
   Associativity
-    m >>= (\x -> k x >>= h) == (m >>= k) >>= h
     m >=> (n >=> h) == (m >=> k) >=> h
 
 --------------------------------------------------
