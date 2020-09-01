@@ -1,3 +1,5 @@
+Подготовительная часть. Оставляю без объяснений.
+
 > {-# OPTIONS -Wall -Wno-unused-imports #-}
 
 > {-# LANGUAGE InstanceSigs #-}
@@ -12,6 +14,19 @@
 > import           Data.Vector (Vector)
 > import qualified Data.Vector as Vector
 
+Конец подготовительной части.
+
+--------------------------------------------------
+
+% -- $> :t map
+
+% -- $> :t map (+ 1)
+
+--------------------------------------------------
+
+< (.) :: (b -> c) -> (a -> b) -> (a -> c)
+< f . g = _
+
 --------------------------------------------------
 
 % -- $> map (+ 1) [3, 15, 9, 20]
@@ -21,14 +36,17 @@
 %     Vector.fromList [3, 15, 9, 20]
 % <$ -}
 
-% -- $> :t map
-
-% -- $> :t map (+ 1)
-
 --------------------------------------------------
 
 < class Functor f where
 <   fmap :: (a -> b) -> f a -> f b
+
+Законы
+
+  Identity
+    fmap id == id
+  Composition
+    fmap (f . g) == fmap f . fmap g
 
 < instance Functor [] where
 <   fmap :: (a -> b) -> [a] -> [b]
@@ -39,13 +57,6 @@
 <   fmap = Vector.map
 
 % -- $> :t fmap (+ 1)
-
-Законы
-
-  Identity
-    fmap id == id
-  Composition
-    fmap (f . g) == fmap f . fmap g
 
 < (<$>) :: Functor f => (a -> b) -> f a -> f b
 < (<$>) = fmap
