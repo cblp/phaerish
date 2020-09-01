@@ -40,6 +40,13 @@
 
 % -- $> :t fmap (+ 1)
 
+Законы
+
+  Identity
+    fmap id == id
+  Composition
+    fmap (f . g) == fmap f . fmap g
+
 < (<$>) :: Functor f => (a -> b) -> f a -> f b
 < (<$>) = fmap
 
@@ -223,6 +230,19 @@
 <   liftA2 :: (a -> b -> c) -> f a -> f b -> f c
 <   liftA2 f x y = pure f <*> x <*> y
 
+Законы
+
+  Identity
+    pure id <*> v == v
+  Composition
+    pure (.) <*> u <*> v <*> w == u <*> (v <*> w)
+  Homomorphism
+    pure f <*> pure x == pure (f x)
+  Interchange
+    u <*> pure y == pure ($ y) <*> u
+
+--------------------------------------------------
+
 Неопределённость/Невычислимость/Незавершимость
 ----------------------------------------------
 
@@ -395,6 +415,16 @@
 <   (<>) :: m -> m -> m
 <   mempty :: m
 
+Законы
+
+  Right identity
+    x <> mempty = x
+  Left identity
+    mempty <> x = x
+  Associativity
+    x <> (y <> z) = (x <> y) <> z
+    -- Semigroup law
+
 % -- $> mempty :: String
 
 % -- $> "hell" <> "o"
@@ -461,6 +491,16 @@ logic
 
 < class Monad m where
 <   (>>=) :: m a -> (a -> m b) -> m b
+
+Законы
+
+  Left identity
+    pure a >>= k == k a
+  Right identity
+    m >>= pure == m
+  Associativity
+    m >>= (\x -> k x >>= h) == (m >>= k) >>= h
+    m >=> (n >=> h) == (m >=> k) >=> h
 
 --------------------------------------------------
 
