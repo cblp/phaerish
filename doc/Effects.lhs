@@ -4,7 +4,7 @@
 
 > {-# LANGUAGE InstanceSigs #-}
 
--- $> :set -XFlexibleContexts -XNoStarIsType
+% -- $> :set -XFlexibleContexts -XNoStarIsType
 
 > import           Prelude hiding (
 >                    Either (..),
@@ -18,25 +18,39 @@
 
 --------------------------------------------------
 
-% -- $> :t map
+% -- $> :t (+ 1)
+
+% -- $> :t map :: (a -> b) -> ([a] -> [b])
 
 % -- $> :t map (+ 1)
 
 --------------------------------------------------
 
-< (.) :: (b -> c) -> (a -> b) -> (a -> c)
-< f . g = _
+< (.) :: (b -> c) -> (a -> b) -> a -> c
+< (f . g) x = f (g x)
+
+% -- $> ((*10) . (+1)) 42
+
+% -- $> ((+1) . (*10)) 42
 
 --------------------------------------------------
 
 % -- $> map (+ 1) [3, 15, 9, 20]
 
 % {- $>
-%   Vector.map (+ 1) $
-%     Vector.fromList [3, 15, 9, 20]
-% <$ -}
+  Vector.map (+ 1) $
+    Vector.fromList [3, 15, 9, 20]
+<$ -}
 
 --------------------------------------------------
+
+% -- $> :type 'a'
+
+% -- $> :kind Bool
+
+% -- $> :kind [Bool]
+
+% -- $> :kind []
 
 < class Functor f where
 <   fmap :: (a -> b) -> f a -> f b
@@ -121,6 +135,8 @@
         appendFile
           "/var/log/myapp.log"
           "INFO: something happened"
+
+% -- $> :t appendFile "/tmp/myapp.log" "INFO: something happened"
 
 --------------------------------------------------
 
@@ -231,15 +247,18 @@
 
 --------------------------------------------------
 
-< class Applicative f where
+< class Functor f => Applicative f where
 <
 <   pure :: a -> f a
 <
+<   -- | "ap(ply)"
 <   (<*>) :: f (a -> b) -> f a -> f b
 <   (<*>) = liftA2 id
-<
-<   liftA2 :: (a -> b -> c) -> f a -> f b -> f c
-<   liftA2 f x y = pure f <*> x <*> y
+
+> liftA2
+>   :: Applicative f
+>   => (a -> b -> c) -> f a -> f b -> f c
+> liftA2 f x y = pure f <*> x <*> y
 
 Законы
 
@@ -319,17 +338,16 @@
 > instance Applicative (Reader r) where
 >
 >   pure :: a -> Reader r a
->   pure a = R $ \_ -> a
+>   pure = R . const
 >
 >   (<*>)
 >     :: Reader r (a -> b)
 >     -> Reader r a
 >     -> Reader r b
->   R f <*> R x = R $ \r -> (f r) (x r)
-
-% -- $> :t (,)
-
-% -- $> (,) "foo" "bar"
+>   R getf <*> R getx =
+>     R $ \r -> let f = getf r
+>                   x = getx r
+>               in  f x
 
 > isTemperatureGoodOrBad :: Reader Integer Bool
 > isTemperatureGoodOrBad =
@@ -337,9 +355,9 @@
 >   <$> isTemperatureGood
 >   <*> isTemperatureBad
 
-% -- $> runReader isTemperatureGoodOrBad 10
+-- $> runReader isTemperatureGoodOrBad 10
 
-% -- $> runReader isTemperatureGoodOrBad 100
+-- $> runReader isTemperatureGoodOrBad 100
 
 --------------------------------------------------
 
@@ -365,9 +383,9 @@
 > roll2d6 :: [Integer]
 > roll2d6 = (+) <$> d6 <*> d6
 
-% -- $> roll2d6
+-- $> roll2d6
 
-% -- $> Data.List.nub roll2d6
+-- $> Data.List.nub roll2d6
 
 --------------------------------------------------
 
@@ -379,6 +397,13 @@
 Детерминированн.  │ Зависимость   │ Reader  │ + +
                   ├───────────────┼─────────┼─────
                   │ Вариативность │ []      │ + ➕
+──────────────────┼───────────────┼─────────┼─────
+?                 │ ?             │ Identity│ ? ?
+
+--------------------------------------------------
+
+> data Identity a = I a
+>   deriving (Show)
 
 --------------------------------------------------
 
@@ -405,9 +430,9 @@
 
 --------------------------------------------------
 
-> instance Functor (Writer w) where
->   fmap :: (a -> b) -> Writer w a -> Writer w b
->   fmap f (W (a, w)) = W (f a, w)
+% > instance Functor (Writer w) where
+% >   fmap :: (a -> b) -> Writer w a -> Writer w b
+% >   fmap f (W (a, w)) = _
 
 % -- $> show <$> addWithLog 3 15
 
@@ -442,17 +467,17 @@
 
 --------------------------------------------------
 
-> instance Monoid w => Applicative (Writer w)
->   where
->
->   pure :: a -> Writer w a
->   pure a = W (a, mempty)
->
->   (<*>)
->     :: Writer w (a -> b)
->     -> Writer w a
->     -> Writer w b
->   W (f, w1) <*> W (x, w2) = W (f x, w1 <> w2)
+% > instance Monoid w => Applicative (Writer w)
+% >   where
+% >
+% >   pure :: a -> Writer w a
+% >   pure a = _
+% >
+% >   (<*>)
+% >     :: Writer w (a -> b)
+% >     -> Writer w a
+% >     -> Writer w b
+% >   W (f, w1) <*> W (x, w2) = _
 
 > makeWithLog
 >   :: Show a => String -> a -> Writer [String] a
@@ -537,41 +562,33 @@ logic
 
 > data State s a = S (s -> (a, s))
 
-> instance Functor (State s) where
->   fmap :: (a -> b) -> State s a -> State s b
->   fmap f (S act) =
->     S $ \s0 -> let (a, s1) = act s0 in (f a, s1)
+% > instance Functor (State s) where
+% >   fmap :: (a -> b) -> State s a -> State s b
+% >   fmap f (S act) =
+% >     _
 
-> instance Applicative (State s) where
->
->   pure :: a -> State s a
->   pure a = S $ \s -> (a, s)
->
->   (<*>)
->     :: State s (a -> b)
->     -> State s a
->     -> State s b
->   S sf <*> S sx =
->     S $
->       \s0 ->
->         let (f, s1) = sf s0
->             (x, s2) = sx s1
->         in  (f x, s2)
+% > instance Applicative (State s) where
+% >
+% >   pure :: a -> State s a
+% >   pure a = _
+% >
+% >   (<*>)
+% >     :: State s (a -> b)
+% >     -> State s a
+% >     -> State s b
+% >   S sf <*> S sx =
+% >     _
 
-> instance Monad (State s) where
->   (>>=)
->     :: State s a
->     -> (a -> State s b)
->     -> State s b
->   S act1 >>= k =
->     S $
->       \s0 ->
->         let (a, s1) = act1 s0
->             S act2 = k a
->         in  act2 s1
+% > instance Monad (State s) where
+% >   (>>=)
+% >     :: State s a
+% >     -> (a -> State s b)
+% >     -> State s b
+% >   S act1 >>= k =
+% >     _
 
 > runState :: State s a -> s -> (a, s)
-> runState (S act) = act
+> runState (S act) a = act a
 
 > getUnique :: State Integer Integer
 > getUnique = S $ \n -> (n, n + 1)
@@ -612,30 +629,3 @@ logic
               ├───────────────┼─────────┼───────
               │ Лишний выход  │ State   │ ➕➕➕
               │ + зависимость │         │
-
---------------------------------------------------
-
-> data Identity a = I a
->   deriving (Show)
-
---------------------------------------------------
-
-Чистота       │ Эффект        │ Тип       │ F A M
-━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━┿━━━━━━━━━━━┿━━━━━━━
-Завершимость  │ Остановка     │ Maybe     │ + + ?
-              │               │ Either    │ + + ?
-──────────────┼───────────────┼───────────┼───────
-Детерминиров. │ Зависимость   │ Reader    │ + + ?
-              ├───────────────┼───────────┼───────
-              │ Вариативность │ []        │ + + ?
-──────────────┼───────────────┼───────────┼───────
-Нет побочки   │ Лишний выход  │ Writer    │ + + ?
-              ├───────────────┼───────────┼───────
-              │ Лишний выход  │ State     │ + + +
-              │ + зависимость │           │
-──────────────┼───────────────┼───────────┼───────
-ничего        │ всё           │ IO        │ ⊕ ⊕ ⊕
-──────────────┼───────────────┼───────────┼───────
-всё           │ ничего        │ Identity  │ ? ? ?
-
---------------------------------------------------
