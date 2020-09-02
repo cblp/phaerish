@@ -9,7 +9,7 @@ common language
 
 library
   import: language
-  exposed-modules: Sqeq
+  exposed-modules: Sqeq, Hw
   hs-source-dirs: lib
 
 executable sqeq
