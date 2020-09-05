@@ -4,6 +4,8 @@
 
 > {-# LANGUAGE InstanceSigs #-}
 
+> module Effects where
+
 % -- $> :set -XFlexibleContexts -XNoStarIsType
 
 > import           Prelude hiding (
